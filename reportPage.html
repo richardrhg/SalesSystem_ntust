@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>員工銷售管理系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js"></script>
+</head>
+
+<body>
+    <div class="navbar navbar-expand-lg">
+        <div class="container">
+            <a href="./index.html" id="navbar-title" class="navbar-brand">員工銷售管理系統</a>
+            <div class="navbar-nav navbar-nav-links">
+                <a href="./employeePage.html" class="nav-link">員工管理</a>
+                <a href="./productPage.html" class="nav-link">產品管理</a>
+                <a href="./salesPage.html" class="nav-link">銷售管理</a>
+                <a href="./reportPage.html" class="nav-link">報表管理</a>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>報表管理</h1>
+                    <div class="d-flex align-items-center gap-3">
+                        <label for="reportType" class="form-label mb-0">選擇報表類型：</label>
+                        <select class="form-select" id="reportType" style="width: 300px;">
+                            <option value="">請選擇報表類型</option>
+                            <option value="1">每個員工的銷售數量</option>
+                            <option value="2">每個產品的銷售數量</option>
+                            <option value="3">每位員工銷售平均數量</option>
+                            <option value="4">每種產品平均銷售數量</option>
+                            <option value="5">員工銷售紀錄資料</option>
+                            <option value="6">必推銷售產品（前五名）</option>
+                        </select>
+                        <button class="btn btn-primary" id="btn-load-report">載入報表</button>
+                    </div>
+                </div>
+                
+                <div id="reportContent" class="mt-4">
+                    <div class="card">
+                        <div class="card-body text-center text-muted">
+                            <p class="mb-0">請選擇報表類型並點擊「載入報表」</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Copyright © 2025 員工銷售管理系統. All rights reserved.</p>
+    </div>
+</body>
+
+</html>

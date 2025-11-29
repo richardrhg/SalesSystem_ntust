@@ -1,0 +1,49 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    text-decoration: none;
+    list-style: none;
+    border: none;
+    outline: none;
+}
+
+
+body {
+    background-color: rgb(233, 226, 226);
+    min-height: 100vh;
+}
+
+.footer{
+    text-align: center;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #ccc;
+    margin-top: 20px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    font-size: 14px;
+    color: #666;
+    background-color: #f0f0f0;
+}
+
+.table-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    max-height: 750px;
+    overflow-y: auto;
+}
+
+.table-container table thead th {
+    background-color: #f8f9fa !important;
+}
+
+body {
+    padding-bottom: 60px;
+}
