@@ -34,6 +34,26 @@
                     <h1>銷售紀錄</h1>
                     <button class="btn btn-outline-primary" id="btn-add-sale">新增銷售</button>
                 </div>
+                <div class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="search-sales" placeholder="搜尋員工姓名、產品名稱...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filter-employee-sales">
+                                <option value="">全部員工</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filter-product-sales">
+                                <option value="">全部產品</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-secondary w-100" id="btn-clear-search-sales">清除</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div class="d-flex align-items-center gap-2">
                         <label for="pageSize-sales" class="form-label mb-0">每頁顯示：</label>

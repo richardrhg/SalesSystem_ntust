@@ -121,7 +121,7 @@ async function fetchDataFromAPI(apiMethod) {
       url += `&report_type=1`;
     }
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP 錯誤！狀態碼: ${response.status}`);
     }
@@ -296,8 +296,15 @@ function fillEmployeeTable(employees) {
 
   tableBody.innerHTML = "";
 
+  // 檢查是否有搜尋條件
+  const searchInput = document.getElementById("search-employees");
+  const hasSearchTerm = searchInput && searchInput.value.trim().length > 0;
+  
+  // 使用篩選後的數據（如果有搜尋條件，即使結果為空也要使用篩選後的數據）
+  const dataToShow = hasSearchTerm ? filteredEmployeesData : employees;
+
   const paginatedData = paginateData(
-    employees,
+    dataToShow,
     currentPage.employees,
     pageSize.employees
   );
@@ -331,7 +338,7 @@ function fillEmployeeTable(employees) {
   });
 
   renderPagination(
-    employees.length,
+    dataToShow.length,
     currentPage.employees,
     pageSize.employees,
     "pagination-employees",
@@ -347,6 +354,11 @@ let currentSaleId = null;
 let employeesData = [];
 let productsData = [];
 let salesData = [];
+
+// 篩選相關變數
+let filteredEmployeesData = [];
+let filteredProductsData = [];
+let filteredSalesData = [];
 
 // 分頁相關變數
 let currentPage = {
@@ -392,6 +404,22 @@ function initEmployeePage() {
       pageSize.employees = parseInt(this.value);
       currentPage.employees = 1;
       refreshTable("employees");
+    });
+  }
+
+  // 搜尋功能
+  const searchInput = document.getElementById("search-employees");
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      filterEmployees();
+    });
+  }
+
+  const clearSearchBtn = document.getElementById("btn-clear-search-employees");
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", function () {
+      document.getElementById("search-employees").value = "";
+      filterEmployees();
     });
   }
 }
@@ -459,7 +487,9 @@ async function confirmDeleteEmployee() {
       await reloadEmployeeData();
       showNotification("員工已成功刪除！", "success");
     } else {
-      showNotification("刪除失敗，請稍後再試。", "error");
+      // 顯示詳細的錯誤訊息
+      const errorMsg = result.error || "刪除失敗，請稍後再試。";
+      showNotification(errorMsg, "error");
     }
   } catch (error) {
     console.error("刪除員工失敗:", error);
@@ -582,8 +612,11 @@ function fillProductTable(products) {
 
   tableBody.innerHTML = "";
 
+  // 使用篩選後的數據
+  const dataToShow = filteredProductsData.length > 0 ? filteredProductsData : products;
+
   const paginatedData = paginateData(
-    products,
+    dataToShow,
     currentPage.products,
     pageSize.products
   );
@@ -612,7 +645,7 @@ function fillProductTable(products) {
   });
 
   renderPagination(
-    products.length,
+    dataToShow.length,
     currentPage.products,
     pageSize.products,
     "pagination-products",
@@ -631,7 +664,10 @@ function fillSaleTable(sales) {
 
   tableBody.innerHTML = "";
 
-  const paginatedData = paginateData(sales, currentPage.sales, pageSize.sales);
+  // 使用篩選後的數據
+  const dataToShow = filteredSalesData.length > 0 ? filteredSalesData : sales;
+
+  const paginatedData = paginateData(dataToShow, currentPage.sales, pageSize.sales);
 
   paginatedData.forEach((sale) => {
     const row = document.createElement("tr");
@@ -656,7 +692,7 @@ function fillSaleTable(sales) {
   });
 
   renderPagination(
-    sales.length,
+    dataToShow.length,
     currentPage.sales,
     pageSize.sales,
     "pagination-sales",
@@ -690,6 +726,31 @@ function initProductPage() {
   if (btnConfirmDelete) {
     btnConfirmDelete.addEventListener("click", function () {
       confirmDeleteProduct();
+    });
+  }
+
+  const pageSizeSelect = document.getElementById("pageSize-products");
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener("change", function () {
+      pageSize.products = parseInt(this.value);
+      currentPage.products = 1;
+      refreshTable("products");
+    });
+  }
+
+  // 搜尋功能
+  const searchInput = document.getElementById("search-products");
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      filterProducts();
+    });
+  }
+
+  const clearSearchBtn = document.getElementById("btn-clear-search-products");
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", function () {
+      document.getElementById("search-products").value = "";
+      filterProducts();
     });
   }
 }
@@ -726,6 +787,42 @@ function initSalePage() {
       pageSize.sales = parseInt(this.value);
       currentPage.sales = 1;
       refreshTable("sales");
+    });
+  }
+
+  // 載入員工和產品選項
+  loadEmployeesForSaleFilter();
+  loadProductsForSaleFilter();
+
+  // 搜尋和篩選功能
+  const searchInput = document.getElementById("search-sales");
+  if (searchInput) {
+    searchInput.addEventListener("input", function () {
+      filterSales();
+    });
+  }
+
+  const filterEmployee = document.getElementById("filter-employee-sales");
+  if (filterEmployee) {
+    filterEmployee.addEventListener("change", function () {
+      filterSales();
+    });
+  }
+
+  const filterProduct = document.getElementById("filter-product-sales");
+  if (filterProduct) {
+    filterProduct.addEventListener("change", function () {
+      filterSales();
+    });
+  }
+
+  const clearSearchBtn = document.getElementById("btn-clear-search-sales");
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener("click", function () {
+      document.getElementById("search-sales").value = "";
+      document.getElementById("filter-employee-sales").value = "";
+      document.getElementById("filter-product-sales").value = "";
+      filterSales();
     });
   }
 }
@@ -790,7 +887,9 @@ async function confirmDeleteProduct() {
       await reloadProductData();
       showNotification("產品已成功刪除！", "success");
     } else {
-      showNotification("刪除失敗，請稍後再試。", "error");
+      // 顯示詳細的錯誤訊息
+      const errorMsg = result.error || "刪除失敗，請稍後再試。";
+      showNotification(errorMsg, "error");
     }
   } catch (error) {
     console.error("刪除產品失敗:", error);
@@ -1283,10 +1382,17 @@ async function displayReport(data, reportType, average = null, stats = null) {
     if (reportType === "5") {
       // 先載入員工列表
       const employeesData = await fetchDataFromAPI("get_employees");
+
+      // 獲取當前選中的員工ID（如果存在）
+      const currentEmpFilter = document.getElementById("empFilter-report5");
+      const selectedEmpId = currentEmpFilter ? currentEmpFilter.value : "";
+
       let employeeOptions = '<option value="">全部員工</option>';
       if (employeesData && employeesData.length > 0) {
         employeesData.forEach((emp) => {
-          employeeOptions += `<option value="${emp.emp_id}">${emp.emp_name}</option>`;
+          const selected =
+            selectedEmpId === String(emp.emp_id) ? " selected" : "";
+          employeeOptions += `<option value="${emp.emp_id}"${selected}>${emp.emp_name}</option>`;
         });
       }
 
@@ -1434,7 +1540,6 @@ async function displayReport(data, reportType, average = null, stats = null) {
                             <table class="table table-striped table-hover">
                                 <thead>
                                     <tr>
-                                        <th>銷售編號</th>
                                         <th>員工姓名</th>
                                         <th>產品名稱</th>
                                         <th>銷售數量</th>
@@ -1447,7 +1552,6 @@ async function displayReport(data, reportType, average = null, stats = null) {
                                       .map(
                                         (item) => `
                                         <tr>
-                                            <td>${item["銷售編號"] || ""}</td>
                                             <td>${item["員工姓名"] || ""}</td>
                                             <td>${item["產品名稱"] || ""}</td>
                                             <td>${item["銷售數量"] || ""}</td>
@@ -1712,6 +1816,117 @@ function showReportEmpty() {
             </div>
         </div>
     `;
+}
+
+// 員工篩選函數
+function filterEmployees() {
+  const searchInput = document.getElementById("search-employees");
+  if (!searchInput) return;
+  
+  const searchTerm = searchInput.value.toLowerCase().trim();
+  
+  if (!searchTerm) {
+    filteredEmployeesData = [];
+  } else {
+    filteredEmployeesData = employeesData.filter((emp) => {
+      const empName = (emp.emp_name || "").toLowerCase();
+      const title = (emp.title || "").toLowerCase();
+      return empName.includes(searchTerm) || title.includes(searchTerm);
+    });
+  }
+  
+  currentPage.employees = 1;
+  fillEmployeeTable(employeesData);
+}
+
+// 產品篩選函數
+function filterProducts() {
+  const searchTerm = document.getElementById("search-products")?.value.toLowerCase() || "";
+  
+  if (!searchTerm) {
+    filteredProductsData = [];
+  } else {
+    filteredProductsData = productsData.filter((product) => {
+      const productName = (product.product_name || "").toLowerCase();
+      return productName.includes(searchTerm);
+    });
+  }
+  
+  currentPage.products = 1;
+  fillProductTable(productsData);
+}
+
+// 銷售篩選函數
+function filterSales() {
+  const searchTerm = document.getElementById("search-sales")?.value.toLowerCase() || "";
+  const filterEmployee = document.getElementById("filter-employee-sales")?.value || "";
+  const filterProduct = document.getElementById("filter-product-sales")?.value || "";
+  
+  const hasFilter = searchTerm || filterEmployee || filterProduct;
+  
+  if (!hasFilter) {
+    filteredSalesData = [];
+  } else {
+    filteredSalesData = salesData.filter((sale) => {
+      // 文字搜尋
+      if (searchTerm) {
+        const empName = (sale.empName || "").toLowerCase();
+        const productName = (sale.productName || "").toLowerCase();
+        if (!empName.includes(searchTerm) && !productName.includes(searchTerm)) {
+          return false;
+        }
+      }
+      
+      // 員工篩選
+      if (filterEmployee && String(sale.emp_id) !== filterEmployee) {
+        return false;
+      }
+      
+      // 產品篩選
+      if (filterProduct && String(sale.product_id) !== filterProduct) {
+        return false;
+      }
+      
+      return true;
+    });
+  }
+  
+  currentPage.sales = 1;
+  fillSaleTable(salesData);
+}
+
+// 載入員工選項到銷售篩選器
+async function loadEmployeesForSaleFilter() {
+  const select = document.getElementById("filter-employee-sales");
+  if (!select) return;
+  
+  const data = await fetchDataFromAPI("get_employees");
+  if (data && data.length > 0) {
+    select.innerHTML = '<option value="">全部員工</option>';
+    data.forEach((emp) => {
+      const option = document.createElement("option");
+      option.value = emp.emp_id;
+      option.textContent = emp.emp_name;
+      select.appendChild(option);
+    });
+  }
+}
+
+// 載入產品選項到銷售篩選器
+async function loadProductsForSaleFilter() {
+  const select = document.getElementById("filter-product-sales");
+  if (!select) return;
+  
+  const data = await fetchDataFromAPI("get_products");
+  if (data && data.length > 0) {
+    select.innerHTML = '<option value="">全部產品</option>';
+    data.forEach((product) => {
+      const option = document.createElement("option");
+      option.value = product.product_id;
+      option.textContent = product.product_name;
+      select.appendChild(option);
+    });
+  }
 }
 
 // 更新 DOMContentLoaded 事件監聽器

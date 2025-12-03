@@ -60,14 +60,60 @@ switch ($_GET["do"]) {
         echo json_encode(["success" => true]);
         break;
     case "delete_employee":
-        $stmt = $pdo->prepare("DELETE FROM employees WHERE emp_id = ?");
-        $stmt->execute([$_GET["emp_id"]]);
-        echo json_encode(["success" => true]);
+        try {
+            $empId = (int)$_GET["emp_id"];
+            
+            // 檢查是否有相關的銷售記錄
+            $checkStmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE emp_id = ?");
+            $checkStmt->execute([$empId]);
+            $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result && $result['count'] > 0) {
+                // 如果有銷售記錄，返回錯誤訊息
+                echo json_encode([
+                    "success" => false,
+                    "error" => "無法刪除此員工，因為已有 " . $result['count'] . " 筆相關的銷售記錄。請先刪除相關的銷售記錄後再試。"
+                ]);
+            } else {
+                // 沒有銷售記錄，可以安全刪除
+                $stmt = $pdo->prepare("DELETE FROM employees WHERE emp_id = ?");
+                $stmt->execute([$empId]);
+                echo json_encode(["success" => true]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "error" => "刪除員工失敗：" . $e->getMessage()
+            ]);
+        }
         break;
     case "delete_product":
-        $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = ?");
-        $stmt->execute([$_GET["product_id"]]);
-        echo json_encode(["success" => true]);
+        try {
+            $productId = (int)$_GET["product_id"];
+            
+            // 檢查是否有相關的銷售記錄
+            $checkStmt = $pdo->prepare("SELECT COUNT(*) as count FROM sales WHERE product_id = ?");
+            $checkStmt->execute([$productId]);
+            $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result && $result['count'] > 0) {
+                // 如果有銷售記錄，返回錯誤訊息
+                echo json_encode([
+                    "success" => false,
+                    "error" => "無法刪除此產品，因為已有 " . $result['count'] . " 筆相關的銷售記錄。請先刪除相關的銷售記錄後再試。"
+                ]);
+            } else {
+                // 沒有銷售記錄，可以安全刪除
+                $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = ?");
+                $stmt->execute([$productId]);
+                echo json_encode(["success" => true]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "error" => "刪除產品失敗：" . $e->getMessage()
+            ]);
+        }
         break;
     case "delete_sale":
         $stmt = $pdo->prepare("DELETE FROM sales WHERE sale_id = ?");
@@ -200,6 +246,60 @@ switch ($_GET["do"]) {
             default:
                 echo json_encode([]);
                 break;
+        }
+        break;
+    case "get_dashboard_stats":
+        // 獲取儀表板統計數據
+        try {
+            // 員工總數
+            $empStmt = $pdo->query("SELECT COUNT(*) as count FROM employees");
+            $empCount = $empStmt->fetch(PDO::FETCH_ASSOC)['count'];
+            
+            // 產品總數
+            $productStmt = $pdo->query("SELECT COUNT(*) as count FROM products");
+            $productCount = $productStmt->fetch(PDO::FETCH_ASSOC)['count'];
+            
+            // 銷售記錄總數
+            $saleStmt = $pdo->query("SELECT COUNT(*) as count FROM sales");
+            $saleCount = $saleStmt->fetch(PDO::FETCH_ASSOC)['count'];
+            
+            // 總銷售額
+            $totalSalesStmt = $pdo->query("
+                SELECT SUM(s.quantity * p.unit_price) as total_sales
+                FROM sales s
+                LEFT JOIN products p ON s.product_id = p.product_id
+            ");
+            $totalSales = $totalSalesStmt->fetch(PDO::FETCH_ASSOC)['total_sales'] ?? 0;
+            
+            // 最近5筆銷售記錄
+            $recentSalesStmt = $pdo->query("
+                SELECT s.sale_id, e.emp_name, p.product_name, s.quantity, s.sale_date,
+                       s.quantity * p.unit_price as sales_amount
+                FROM sales s
+                LEFT JOIN employees e ON s.emp_id = e.emp_id
+                LEFT JOIN products p ON s.product_id = p.product_id
+                ORDER BY s.sale_date DESC, s.sale_id DESC
+                LIMIT 5
+            ");
+            $recentSales = $recentSalesStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $stats = [
+                'employee_count' => (int)$empCount,
+                'product_count' => (int)$productCount,
+                'sale_count' => (int)$saleCount,
+                'total_sales' => (float)$totalSales,
+                'recent_sales' => $recentSales
+            ];
+            
+            echo json_encode($stats);
+        } catch (Exception $e) {
+            echo json_encode([
+                'employee_count' => 0,
+                'product_count' => 0,
+                'sale_count' => 0,
+                'total_sales' => 0,
+                'recent_sales' => []
+            ]);
         }
         break;
     default:
